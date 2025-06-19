@@ -42,6 +42,7 @@
   ];
 
   const ctx = document.getElementById('votesChart').getContext('2d');
+
   const chart = new Chart(ctx, {
     type: 'pie',
     data: {
@@ -56,8 +57,10 @@
       plugins: {
         datalabels: {
           formatter: (value, ctx) => {
-            const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-            return (value / total * 100).toFixed(1) + '%';
+            const visibleData = ctx.chart.getDatasetMeta(0).data
+              .map((segment, i) => segment.hidden ? 0 : ctx.chart.data.datasets[0].data[i]);
+            const total = visibleData.reduce((a, b) => a + b, 0);
+            return total > 0 ? (value / total * 100).toFixed(1) + '%' : '';
           },
           color: '#fff',
           font: { weight: 'bold' }
