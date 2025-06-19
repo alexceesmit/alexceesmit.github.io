@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Votes per Country Pie Chart</title>
+  <title>Emissions Breakdown Pie Chart</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
@@ -25,31 +25,29 @@
 </head>
 <body>
 
-<h2>Votes per Country</h2>
-<canvas id="votesChart" aria-label="Pie chart of votes per country" role="img"></canvas>
-<button id="toggleEurope">Toggle European Countries</button>
+<h2>Emissions Breakdown</h2>
+<canvas id="emissionsChart" aria-label="Pie chart of emissions categories" role="img"></canvas>
+<button id="toggleTransport">Toggle Transport & Travel</button>
 
 <script>
-  const countries = [
-    { label: 'Germany', votes: 120, isEuropean: true },
-    { label: 'France', votes: 100, isEuropean: true },
-    { label: 'Italy', votes: 90, isEuropean: true },
-    { label: 'Spain', votes: 70, isEuropean: true },
-    { label: 'USA', votes: 150, isEuropean: false },
-    { label: 'Canada', votes: 110, isEuropean: false },
-    { label: 'Japan', votes: 130, isEuropean: false },
-    { label: 'Brazil', votes: 80, isEuropean: false },
+  const categories = [
+    { label: 'Transport & Travel', value: 53.94, canToggle: true },
+    { label: 'Gas', value: 23.14, canToggle: false },
+    { label: 'Procurement/Materials', value: 9.57, canToggle: false },
+    { label: 'Electricity', value: 13.05, canToggle: false },
+    { label: 'Water', value: 0.27, canToggle: false },
+    { label: 'Waste', value: 0.03, canToggle: false }
   ];
 
-  const ctx = document.getElementById('votesChart').getContext('2d');
+  const ctx = document.getElementById('emissionsChart').getContext('2d');
 
   const chart = new Chart(ctx, {
     type: 'pie',
     data: {
-      labels: countries.map(c => c.label),
+      labels: categories.map(c => c.label),
       datasets: [{
-        data: countries.map(c => c.votes),
-        backgroundColor: ['#ff6384','#36a2eb','#ffcd56','#4bc0c0','#9966ff','#ff9f40','#c9cbcf','#84ff63']
+        data: categories.map(c => c.value),
+        backgroundColor: ['#ff6384','#36a2eb','#ffcd56','#4bc0c0','#9966ff','#84ff63']
       }]
     },
     options: {
@@ -60,7 +58,7 @@
             const visibleData = ctx.chart.getDatasetMeta(0).data
               .map((segment, i) => segment.hidden ? 0 : ctx.chart.data.datasets[0].data[i]);
             const total = visibleData.reduce((a, b) => a + b, 0);
-            return total > 0 ? (value / total * 100).toFixed(1) + '%' : '';
+            return total > 0 ? (value / total * 100).toFixed(2) + '%' : '';
           },
           color: '#fff',
           font: { weight: 'bold' }
@@ -69,8 +67,11 @@
           onClick: (e, legendItem, legend) => {
             const idx = legendItem.index;
             const meta = legend.chart.getDatasetMeta(0);
-            meta.data[idx].hidden = !meta.data[idx].hidden;
-            legend.chart.update();
+            // Allow toggling only for Transport & Travel
+            if (categories[idx].canToggle) {
+              meta.data[idx].hidden = !meta.data[idx].hidden;
+              legend.chart.update();
+            }
           }
         }
       }
@@ -78,15 +79,15 @@
     plugins: [ChartDataLabels]
   });
 
-  let europeVisible = true;
-  document.getElementById('toggleEurope').addEventListener('click', () => {
+  let transportVisible = true;
+  document.getElementById('toggleTransport').addEventListener('click', () => {
     const meta = chart.getDatasetMeta(0);
-    countries.forEach((c, i) => {
-      if (c.isEuropean) {
-        meta.data[i].hidden = europeVisible;
+    categories.forEach((c, i) => {
+      if (c.label === 'Transport & Travel') {
+        meta.data[i].hidden = transportVisible;
       }
     });
-    europeVisible = !europeVisible;
+    transportVisible = !transportVisible;
     chart.update();
   });
 </script>
