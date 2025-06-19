@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Emissions Breakdown Pie Chart</title>
+  <title>Emissions Breakdown Doughnut Chart</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
@@ -26,7 +26,7 @@
 <body>
 
 <h2>Emissions Breakdown</h2>
-<canvas id="emissionsChart" aria-label="Pie chart of emissions categories" role="img"></canvas>
+<canvas id="emissionsChart" aria-label="Doughnut chart of emissions categories" role="img"></canvas>
 <button id="toggleTransport">Toggle Transport & Travel</button>
 
 <script>
@@ -42,7 +42,7 @@
   const ctx = document.getElementById('emissionsChart').getContext('2d');
 
   const chart = new Chart(ctx, {
-    type: 'pie',
+    type: 'doughnut',
     data: {
       labels: categories.map(c => c.label),
       datasets: [{
@@ -52,22 +52,34 @@
     },
     options: {
       responsive: true,
+      cutout: '40%',
       plugins: {
         datalabels: {
           formatter: (value, ctx) => {
             const visibleData = ctx.chart.getDatasetMeta(0).data
               .map((segment, i) => segment.hidden ? 0 : ctx.chart.data.datasets[0].data[i]);
             const total = visibleData.reduce((a, b) => a + b, 0);
-            return total > 0 ? (value / total * 100).toFixed(2) + '%' : '';
+            const percent = (value / total) * 100;
+            return percent >= 2 ? percent.toFixed(2) + '%' : '';
           },
           color: '#fff',
           font: { weight: 'bold' }
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const label = ctx.label;
+              const value = ctx.raw;
+              const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              const percent = (value / total * 100).toFixed(2);
+              return `${label}: ${percent}% (${value})`;
+            }
+          }
         },
         legend: {
           onClick: (e, legendItem, legend) => {
             const idx = legendItem.index;
             const meta = legend.chart.getDatasetMeta(0);
-            // Allow toggling only for Transport & Travel
             if (categories[idx].canToggle) {
               meta.data[idx].hidden = !meta.data[idx].hidden;
               legend.chart.update();
