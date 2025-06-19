@@ -1,0 +1,102 @@
+# Create the HTML content for the Chart.js pie chart with toggle functionality
+html_content = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Votes per Country Pie Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 40px auto;
+      max-width: 700px;
+    }
+    canvas {
+      max-width: 100%;
+    }
+    button {
+      padding: 10px 16px;
+      margin-top: 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Votes per Country</h2>
+<canvas id="votesChart" aria-label="Pie chart of votes per country" role="img"></canvas>
+<button id="toggleEurope">Toggle European Countries</button>
+
+<script>
+  const countries = [
+    { label: 'Germany', votes: 120, isEuropean: true },
+    { label: 'France', votes: 100, isEuropean: true },
+    { label: 'Italy', votes: 90, isEuropean: true },
+    { label: 'Spain', votes: 70, isEuropean: true },
+    { label: 'USA', votes: 150, isEuropean: false },
+    { label: 'Canada', votes: 110, isEuropean: false },
+    { label: 'Japan', votes: 130, isEuropean: false },
+    { label: 'Brazil', votes: 80, isEuropean: false },
+  ];
+
+  const ctx = document.getElementById('votesChart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: countries.map(c => c.label),
+      datasets: [{
+        data: countries.map(c => c.votes),
+        backgroundColor: ['#ff6384','#36a2eb','#ffcd56','#4bc0c0','#9966ff','#ff9f40','#c9cbcf','#84ff63']
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: {
+          formatter: (value, ctx) => {
+            const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+            return (value / total * 100).toFixed(1) + '%';
+          },
+          color: '#fff',
+          font: { weight: 'bold' }
+        },
+        legend: {
+          onClick: (e, legendItem, legend) => {
+            const idx = legendItem.index;
+            const meta = legend.chart.getDatasetMeta(0);
+            meta.data[idx].hidden = !meta.data[idx].hidden;
+            legend.chart.update();
+          }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+
+  let europeVisible = true;
+  document.getElementById('toggleEurope').addEventListener('click', () => {
+    const meta = chart.getDatasetMeta(0);
+    countries.forEach((c, i) => {
+      if (c.isEuropean) {
+        meta.data[i].hidden = europeVisible;
+      }
+    });
+    europeVisible = !europeVisible;
+    chart.update();
+  });
+</script>
+
+</body>
+</html>
+"""
+
+# Save the HTML to a downloadable file
+file_path = "/mnt/data/votes-pie-chart.html"
+with open(file_path, "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+file_path
